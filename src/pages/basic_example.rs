@@ -138,6 +138,7 @@ impl<'a> BasicExample<'a> {
                 self.label1.clear();
                 write!(&mut self.label1, "Btn2").unwrap();
                 self.widget_states.force_redraw(LABEL1.id());
+                self.pages_sw.signal(crate::Pages::Calculator);
                 continue;
             }
             if ui.add(Button::new(BUTTON3, "Button3")).is_clicked() {

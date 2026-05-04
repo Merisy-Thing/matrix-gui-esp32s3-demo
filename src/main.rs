@@ -5,7 +5,7 @@ mod cst816d;
 mod pages;
 
 use crate::cst816d::{CST816D, TouchPoint, TouchState};
-use crate::pages::{basic_example::BasicExample, msg_box::MsgBox};
+use crate::pages::{basic_example::BasicExample, calculator::Calculator, msg_box::MsgBox};
 use core::cell::RefCell;
 use critical_section::Mutex;
 use dummy_pin::DummyPin;
@@ -86,6 +86,7 @@ async fn task_touch(mut touch: CST816D<I2c<'static, esp_hal::Blocking>>) {
 enum Pages {
     Basic,
     MsgBox,
+    Calculator,
 }
 
 type PageSw = Signal<NoopRawMutex, Pages>;
@@ -190,6 +191,7 @@ async fn main(spawner: embassy_executor::Spawner) {
     log::info!("loop!");
     let mut basic = BasicExample::new(&pages_sw);
     let mut msg_box = MsgBox::new(&pages_sw);
+    let mut calculator = Calculator::new(&pages_sw);
     let mut curr_page = Pages::Basic;
 
     loop {
@@ -207,6 +209,9 @@ async fn main(spawner: embassy_executor::Spawner) {
                 Pages::MsgBox => {
                     msg_box.update(tp_down, location, &mut display);
                 }
+                Pages::Calculator => {
+                    calculator.update(tp_down, location, &mut display);
+                }
             }
 
             log::info!("update cost: {}ms", tick.elapsed().as_millis());
@@ -222,6 +227,10 @@ async fn main(spawner: embassy_executor::Spawner) {
                 Pages::MsgBox => {
                     msg_box.redraw();
                     msg_box.update(false, Point::zero(), &mut display);
+                }
+                Pages::Calculator => {
+                    calculator.redraw();
+                    calculator.update(false, Point::zero(), &mut display);
                 }
             }
         }

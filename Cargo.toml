@@ -54,6 +54,7 @@ enum-iterator = "2.3.0"
 critical-section = "1.2.0"
 heapless = "0.9.2"
 local_static = "0.1"
+num-traits = { version = "0.2", default-features = false }
 
 [patch.crates-io]
 matrix-gui = { git = "https://github.com/Merisy-Thing/matrix-gui.git", branch = "main"  }
