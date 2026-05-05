@@ -63,19 +63,7 @@ impl<'a> Calculator<'a> {
     {
         loop {
             let mut ui = Ui::new_fullscreen(display, &self.widget_states, crate::example_style());
-
-            match (self.last_down, tp_down, location) {
-                (false, true, loc) => {
-                    ui.interact(Interaction::Pressed(loc));
-                }
-                (true, true, loc) => {
-                    ui.interact(Interaction::Drag(loc));
-                }
-                (true, false, loc) => {
-                    ui.interact(Interaction::Release(loc));
-                }
-                (false, false, _) => {}
-            }
+            super::ui_interact(self.last_down, tp_down, location, &mut ui);
             self.last_down = tp_down;
 
             ui.add(Background::new(RegionId::Background));
@@ -116,7 +104,7 @@ impl<'a> Calculator<'a> {
             }
             "." => {
                 if self.expression.ends_with('.') {
-                    self.pages_sw.signal(crate::Pages::Basic);
+                    self.pages_sw.signal(crate::Pages::Home);
                 } else if self.expression.len() < 31 {
                     let expr_str = self.expression.as_str();
                     if expr_str.is_empty() {

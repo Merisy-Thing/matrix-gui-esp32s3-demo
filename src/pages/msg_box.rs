@@ -61,19 +61,7 @@ impl<'a> MsgBox<'a> {
     {
         for _ in 0..2 {
             let mut ui = Ui::new_fullscreen(display, &self.widget_states, crate::example_style());
-
-            match (self.last_down, tp_down, location) {
-                (false, true, loc) => {
-                    ui.interact(Interaction::Pressed(loc));
-                }
-                (true, true, loc) => {
-                    ui.interact(Interaction::Drag(loc));
-                }
-                (true, false, loc) => {
-                    ui.interact(Interaction::Release(loc));
-                }
-                (false, false, _) => {}
-            }
+            super::ui_interact(self.last_down, tp_down, location, &mut ui);
             self.last_down = tp_down;
 
             ui.add(Background::new(RegionId::Background));
@@ -98,7 +86,7 @@ impl<'a> MsgBox<'a> {
                 if response.is_clicked() {
                     log::info!("OK msg clicked");
                     self.show = false;
-                    self.pages_sw.signal(crate::Pages::Basic);
+                    self.pages_sw.signal(crate::Pages::Home);
                     break;
                 }
             }

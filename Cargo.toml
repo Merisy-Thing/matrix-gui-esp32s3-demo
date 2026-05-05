@@ -45,16 +45,17 @@ defmt = { version = "1.0.1", optional = true }
 log = { version = "0.4", optional = true }
 
 embedded-hal = "1.0"
-st7789-lcd = "0.4.0"
-embedded-hal-bus = "0.3.0"
-dummy-pin = "1.0.0"
-embedded-graphics = "0.8.2"
-matrix-gui = { version = "0.1.0", features = ["part", "popup"] }
-enum-iterator = "2.3.0"
+st7789-lcd = "0.4"
+embedded-hal-bus = "0.3"
+dummy-pin = "1.0"
+embedded-graphics = "0.8"
+matrix-gui = { version = "0.1.0", features = ["part", "popup", "animation"] }
+enum-iterator = "2.3"
 critical-section = "1.2.0"
-heapless = "0.9.2"
+heapless = "0.9"
 local_static = "0.1"
 num-traits = { version = "0.2", default-features = false }
 
 [patch.crates-io]
-matrix-gui = { git = "https://github.com/Merisy-Thing/matrix-gui.git", branch = "main"  }
+#matrix-gui = { git = "https://github.com/Merisy-Thing/matrix-gui.git", branch = "main"  }
+matrix-gui = { path = "G:\\Embedded_Rust\\matrix-gui" }

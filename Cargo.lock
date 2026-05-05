@@ -1154,7 +1154,6 @@ dependencies = [
 [[package]]
 name = "matrix-gui"
 version = "0.1.0"
-source = "git+https://github.com/Merisy-Thing/matrix-gui.git?branch=main#d16184ab62c0614732870f69b7665a735d5b3abb"
 dependencies = [
  "embedded-graphics",
  "embedded-text",

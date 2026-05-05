@@ -5,7 +5,10 @@ mod cst816d;
 mod pages;
 
 use crate::cst816d::{CST816D, TouchPoint, TouchState};
-use crate::pages::{basic_example::BasicExample, calculator::Calculator, msg_box::MsgBox};
+use crate::pages::{
+    HomePage, anim_switch::AnimSwitch, basic_example::BasicExample, calculator::Calculator,
+    msg_box::MsgBox,
+};
 use core::cell::RefCell;
 use critical_section::Mutex;
 use dummy_pin::DummyPin;
@@ -82,11 +85,25 @@ async fn task_touch(mut touch: CST816D<I2c<'static, esp_hal::Blocking>>) {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 enum Pages {
+    Home,
     Basic,
     MsgBox,
     Calculator,
+    AnimSwitch,
+}
+
+impl core::fmt::Display for Pages {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Pages::Home => write!(f, "Home"),
+            Pages::Basic => write!(f, "Basic"),
+            Pages::MsgBox => write!(f, "MsgBox"),
+            Pages::Calculator => write!(f, "Calculator"),
+            Pages::AnimSwitch => write!(f, "AnimSwitch"),
+        }
+    }
 }
 
 type PageSw = Signal<NoopRawMutex, Pages>;
@@ -189,12 +206,18 @@ async fn main(spawner: embassy_executor::Spawner) {
     let pages_sw: PageSw = Signal::new();
 
     log::info!("loop!");
+    let mut home = HomePage::new(&pages_sw);
     let mut basic = BasicExample::new(&pages_sw);
     let mut msg_box = MsgBox::new(&pages_sw);
     let mut calculator = Calculator::new(&pages_sw);
-    let mut curr_page = Pages::Basic;
+    let mut anim_switch = AnimSwitch::new(&pages_sw);
+    let mut curr_page = Pages::Home;
 
     loop {
+        if curr_page == Pages::AnimSwitch {
+            anim_switch.update_animations(&mut display);
+        }
+
         if let Some(tp) = TOUCH_DATA.try_take() {
             let (tp_down, location) = match tp {
                 TouchState::Pressed(touch_point) => (true, touch_point.into()),
@@ -203,6 +226,9 @@ async fn main(spawner: embassy_executor::Spawner) {
             let tick = embassy_time::Instant::now();
 
             match curr_page {
+                Pages::Home => {
+                    home.update(tp_down, location, &mut display);
+                }
                 Pages::Basic => {
                     basic.update(tp_down, location, &mut display);
                 }
@@ -212,14 +238,26 @@ async fn main(spawner: embassy_executor::Spawner) {
                 Pages::Calculator => {
                     calculator.update(tp_down, location, &mut display);
                 }
+                Pages::AnimSwitch => {
+                    anim_switch.update(tp_down, location, &mut display);
+                }
             }
 
-            log::info!("update cost: {}ms", tick.elapsed().as_millis());
+            log::info!(
+                "update {} cost: {}ms",
+                curr_page,
+                tick.elapsed().as_millis()
+            );
         }
 
         if let Some(page) = pages_sw.try_take() {
             curr_page = page;
+            let tick = embassy_time::Instant::now();
             match page {
+                Pages::Home => {
+                    home.redraw();
+                    home.update(false, Point::zero(), &mut display);
+                }
                 Pages::Basic => {
                     basic.redraw();
                     basic.update(false, Point::zero(), &mut display);
@@ -232,7 +270,12 @@ async fn main(spawner: embassy_executor::Spawner) {
                     calculator.redraw();
                     calculator.update(false, Point::zero(), &mut display);
                 }
+                Pages::AnimSwitch => {
+                    anim_switch.redraw();
+                    anim_switch.update(false, Point::zero(), &mut display);
+                }
             }
+            log::info!("redraw {} cost: {}ms", page, tick.elapsed().as_millis());
         }
 
         led.toggle();

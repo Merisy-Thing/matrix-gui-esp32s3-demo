@@ -93,26 +93,14 @@ impl<'a> BasicExample<'a> {
     {
         loop {
             let mut ui = Ui::new_fullscreen(display, &self.widget_states, crate::example_style());
-
-            match (self.last_down, tp_down, location) {
-                (false, true, loc) => {
-                    ui.interact(Interaction::Pressed(loc));
-                }
-                (true, true, loc) => {
-                    ui.interact(Interaction::Drag(loc));
-                }
-                (true, false, loc) => {
-                    ui.interact(Interaction::Release(loc));
-                }
-                (false, false, _) => {}
-            }
+            super::ui_interact(self.last_down, tp_down, location, &mut ui);
             self.last_down = tp_down;
 
             ui.add(Background::new(RegionId::Background));
 
             if self.widget_states.should_redraw_multi(&[TITLE.id()]) {
                 log::info!("Static 1 redraw needed");
-                ui.add(Label::new(TITLE, "Matrix GUI 示例").with_align(HorizontalAlign::Center));
+                ui.add(Label::new(TITLE, "控件示例").with_align(HorizontalAlign::Center));
             }
             ui.add(Label::new(LABEL1, &self.label1));
 
@@ -138,7 +126,6 @@ impl<'a> BasicExample<'a> {
                 self.label1.clear();
                 write!(&mut self.label1, "Btn2").unwrap();
                 self.widget_states.force_redraw(LABEL1.id());
-                self.pages_sw.signal(crate::Pages::Calculator);
                 continue;
             }
             if ui.add(Button::new(BUTTON3, "Button3")).is_clicked() {
@@ -146,7 +133,7 @@ impl<'a> BasicExample<'a> {
                 self.label1.clear();
                 write!(&mut self.label1, "Btn3").unwrap();
                 self.widget_states.force_redraw(LABEL1.id());
-                self.pages_sw.signal(crate::Pages::MsgBox);
+                self.pages_sw.signal(crate::Pages::Home);
                 continue;
             }
 
