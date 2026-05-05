@@ -89,20 +89,21 @@ impl<'a> AnimSwitch<'a> {
         ui.add(Background::new(RegionId::Background));
 
         ui.lazy_draw(LABEL.id(), |ui| {
-            let status = ui.take_anim_status(self.lb_anim_id).unwrap_or_default();
-            let offset = if let Some(offset) = status { offset } else { 0 };
-
-            let lb_area = if self.sw_on {
-                LABEL.move_by(offset as i16, 0)
+            if let Some(offset) = ui.take_anim_status(self.lb_anim_id).unwrap_or_default() {
+                let lb_area = if self.sw_on {
+                    LABEL.move_by(offset as i16, 0)
+                } else {
+                    LABEL.move_by(100 - offset as i16, 0)
+                };
+                let clr_rect = LABEL
+                    .area()
+                    .resized(offset as u16, LABEL.height() as u16, AnchorPoint::TopLeft)
+                    .rectangle();
+                ui.clear_area(&clr_rect).ok();
+                ui.add(Label::new(&lb_area, "Hello animations"))
             } else {
-                LABEL.move_by(100 - offset as i16, 0)
-            };
-            let clr_rect = LABEL
-                .area()
-                .resized(offset as u16, LABEL.height() as u16, AnchorPoint::TopLeft)
-                .rectangle();
-            ui.clear_area(&clr_rect).ok();
-            ui.add(Label::new(&lb_area, "Hello animations"))
+                Response::Idle
+            }
         });
 
         if ui.add(Button::new(EXIT, "Exit")).is_clicked() {

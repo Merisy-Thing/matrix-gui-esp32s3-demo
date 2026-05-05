@@ -52,10 +52,9 @@ embedded-graphics = "0.8"
 matrix-gui = { version = "0.1.0", features = ["part", "popup", "animation"] }
 enum-iterator = "2.3"
 critical-section = "1.2.0"
-heapless = "0.9"
+heapless = "0.9.3"
 local_static = "0.1"
 num-traits = { version = "0.2", default-features = false }
 
 [patch.crates-io]
-#matrix-gui = { git = "https://github.com/Merisy-Thing/matrix-gui.git", branch = "main"  }
-matrix-gui = { path = "G:\\Embedded_Rust\\matrix-gui" }
+matrix-gui = { git = "https://github.com/Merisy-Thing/matrix-gui.git", branch = "main"  }
