@@ -53,7 +53,7 @@ enum-iterator = "2.3"
 critical-section = "1.2.0"
 
 num-traits = { version = "0.2", default-features = false }
-matrix-gui-demo-pages ={ path= "../domo-pages" }
+matrix-gui-demo-pages ={ path= "../demo-pages" }
 bare-sync = "0.1.1"
 
 [patch.crates-io]

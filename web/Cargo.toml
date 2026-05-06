@@ -22,7 +22,7 @@ wasm-bindgen = "0.2"
 embedded-graphics-web-simulator = "0.4"
 embedded-graphics = "0.8"
 enum-iterator = "2.3"
-matrix-gui-demo-pages = { path = "../domo-pages" }
+matrix-gui-demo-pages = { path = "../demo-pages" }
 bare-sync = "0.1"
 console_error_panic_hook = "0.1"
 
