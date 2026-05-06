@@ -10,7 +10,7 @@ A Matrix GUI demonstration project running on ESP32-S3 microcontroller.
 
 Try the interactive demo online in your browser:
 
-![Launch Web Demo](https://merisy-thing.github.io/matrix-gui-esp32s3-demo)
+[Launch Web Demo](https://merisy-thing.github.io/matrix-gui-esp32s3-demo)
 
 The web version uses WebAssembly to run the Matrix GUI framework in the browser, providing the same experience as the embedded version without requiring hardware.
 
