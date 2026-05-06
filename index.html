@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matrix GUI Demo</title>
+  <style type="text/css">
+    body {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      flex-direction: row;
+      color: white;
+      font-family: "Raleway Dots", cursive;
+    }
+
+    canvas {
+      padding: 0;
+      margin: auto;
+      border-style: dashed;
+      border-color: #605e63;
+      border-width: 1px;
+    }
+
+    body {
+      background-color: #171414;
+    }
+
+    header {
+      margin-bottom: 20px;
+      font-size: 30px;
+
+      width: 100%;
+      text-align: center;
+    }
+
+    footer {
+      font-size: 30px;
+      display: block;
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+  </style>
+<link rel="modulepreload" href="/matrix_gui_web-af5fb49f39c6735d.js" crossorigin="anonymous" integrity="sha384-UUW6y7BcJTqFOCJABdXxcOLmXoNANz1/4PVC+uAWthGQalO85NWg4AeCFUHJIv4Y"><link rel="preload" href="/matrix_gui_web-af5fb49f39c6735d_bg.wasm" crossorigin="anonymous" integrity="sha384-VzwFai+fu/oklYkQCEqZxkEKoJ3ROX3EuEhP1s/zUviTCGtSA+8GSJ+qE7RHnt3j" as="fetch" type="application/wasm"></head>
+
+<body>
+  <header style="text-align: center;">Matrix GUI Demo</header>
+  <footer>
+    <a href="https://github.com/Merisy-Thing/matrix-gui-esp32s3-demo" target="_blank" style="color: #00ff00; text-decoration: none;">🦀 Source Code 🦀</a>
+  </footer>
+
+<script type="module">
+import init, * as bindings from '/matrix_gui_web-af5fb49f39c6735d.js';
+const wasm = await init({ module_or_path: '/matrix_gui_web-af5fb49f39c6735d_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script></body>
+
+</html>
