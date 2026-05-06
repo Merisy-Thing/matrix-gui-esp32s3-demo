@@ -44,7 +44,7 @@
       transform: translateX(-50%);
     }
   </style>
-<link rel="modulepreload" href="/matrix_gui_web-af5fb49f39c6735d.js" crossorigin="anonymous" integrity="sha384-UUW6y7BcJTqFOCJABdXxcOLmXoNANz1/4PVC+uAWthGQalO85NWg4AeCFUHJIv4Y"><link rel="preload" href="/matrix_gui_web-af5fb49f39c6735d_bg.wasm" crossorigin="anonymous" integrity="sha384-VzwFai+fu/oklYkQCEqZxkEKoJ3ROX3EuEhP1s/zUviTCGtSA+8GSJ+qE7RHnt3j" as="fetch" type="application/wasm"></head>
+<link rel="modulepreload" href="/matrix-gui-esp32s3-demo/matrix_gui_web-af5fb49f39c6735d.js" crossorigin="anonymous" integrity="sha384-UUW6y7BcJTqFOCJABdXxcOLmXoNANz1/4PVC+uAWthGQalO85NWg4AeCFUHJIv4Y"><link rel="preload" href="/matrix_gui_web-af5fb49f39c6735d_bg.wasm" crossorigin="anonymous" integrity="sha384-VzwFai+fu/oklYkQCEqZxkEKoJ3ROX3EuEhP1s/zUviTCGtSA+8GSJ+qE7RHnt3j" as="fetch" type="application/wasm"></head>
 
 <body>
   <header style="text-align: center;">Matrix GUI Demo</header>
@@ -53,8 +53,8 @@
   </footer>
 
 <script type="module">
-import init, * as bindings from '/matrix_gui_web-af5fb49f39c6735d.js';
-const wasm = await init({ module_or_path: '/matrix_gui_web-af5fb49f39c6735d_bg.wasm' });
+import init, * as bindings from '/matrix-gui-esp32s3-demo/matrix_gui_web-af5fb49f39c6735d.js';
+const wasm = await init({ module_or_path: '/matrix-gui-esp32s3-demo/matrix_gui_web-af5fb49f39c6735d_bg.wasm' });
 
 
 window.wasmBindings = bindings;
