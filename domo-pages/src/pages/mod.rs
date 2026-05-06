@@ -6,6 +6,11 @@ pub mod basic_example;
 pub mod calculator;
 pub mod msg_box;
 
+pub use anim_switch::*;
+pub use basic_example::*;
+pub use calculator::*;
+pub use msg_box::*;
+
 // enum RegionId { .. }
 // const REGIONID_COUNT: usize
 matrix_gui::free_form_region!(RegionId, (Background), (TITLE, 38, 5, 214, 20),);

@@ -4,7 +4,7 @@ use local_static::LocalStatic;
 use matrix_gui::prelude::*;
 use multi_mono_font::MonoImage;
 
-pub const WIDGETS_COUNT: usize = REGIONID_COUNT;
+const WIDGETS_COUNT: usize = REGIONID_COUNT;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum RadioGroup {

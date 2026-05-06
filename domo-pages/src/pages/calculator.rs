@@ -3,6 +3,7 @@ use embedded_graphics::prelude::Point;
 use heapless::{String, Vec};
 use local_static::LocalStatic;
 use matrix_gui::prelude::*;
+#[allow(unused_imports)]
 use num_traits::float::FloatCore;
 
 // enum RegionId { .. }

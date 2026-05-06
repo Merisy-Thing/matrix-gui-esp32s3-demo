@@ -2,20 +2,14 @@
 #![no_main]
 
 mod cst816d;
-mod pages;
 
 use crate::cst816d::{CST816D, TouchPoint, TouchState};
-use crate::pages::{
-    HomePage, anim_switch::AnimSwitch, basic_example::BasicExample, calculator::Calculator,
-    msg_box::MsgBox,
-};
 use core::cell::RefCell;
 use critical_section::Mutex;
 use dummy_pin::DummyPin;
-use embassy_sync::blocking_mutex::raw::NoopRawMutex;
 use embassy_sync::{blocking_mutex::raw::CriticalSectionRawMutex, signal::Signal};
-use embassy_time::{Duration, Timer};
-use embedded_graphics::image::ImageRaw;
+use embassy_time::{Duration, Instant, Timer};
+use embedded_graphics::geometry::Point;
 use embedded_hal::delay::DelayNs;
 use embedded_hal_bus::spi::{ExclusiveDevice, NoDelay};
 use esp_backtrace as _;
@@ -33,9 +27,7 @@ use esp_hal::{
     time::Rate,
     timer::timg::TimerGroup,
 };
-
-use matrix_gui::prelude::*;
-use multi_mono_font::{CharSize, MultiMonoFont, mapping::StrGlyphMapping};
+use matrix_gui_demo_pages::{self as demo, Pages};
 use st7789_lcd::*;
 
 esp_bootloader_esp_idf::esp_app_desc!();
@@ -84,29 +76,6 @@ async fn task_touch(mut touch: CST816D<I2c<'static, esp_hal::Blocking>>) {
         }
     }
 }
-
-#[derive(Copy, Clone, Debug, PartialEq)]
-enum Pages {
-    Home,
-    Basic,
-    MsgBox,
-    Calculator,
-    AnimSwitch,
-}
-
-impl core::fmt::Display for Pages {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            Pages::Home => write!(f, "Home"),
-            Pages::Basic => write!(f, "Basic"),
-            Pages::MsgBox => write!(f, "MsgBox"),
-            Pages::Calculator => write!(f, "Calculator"),
-            Pages::AnimSwitch => write!(f, "AnimSwitch"),
-        }
-    }
-}
-
-type PageSw = Signal<NoopRawMutex, Pages>;
 
 #[esp_rtos::main]
 async fn main(spawner: embassy_executor::Spawner) {
@@ -203,19 +172,26 @@ async fn main(spawner: embassy_executor::Spawner) {
     display.on().unwrap();
 
     TOUCH_DATA.signal(TouchState::Released(TouchPoint::new(0, 0)));
-    let pages_sw: PageSw = Signal::new();
+    let pages_sw: demo::PageSw = bare_sync::signal::Signal::new();
 
     log::info!("loop!");
-    let mut home = HomePage::new(&pages_sw);
-    let mut basic = BasicExample::new(&pages_sw);
-    let mut msg_box = MsgBox::new(&pages_sw);
-    let mut calculator = Calculator::new(&pages_sw);
-    let mut anim_switch = AnimSwitch::new(&pages_sw);
+    let mut home = demo::HomePage::new(&pages_sw);
+    let mut basic = demo::BasicExample::new(&pages_sw);
+    let mut msg_box = demo::MsgBox::new(&pages_sw);
+    let mut calculator = demo::Calculator::new(&pages_sw);
+    let mut anim_switch = demo::AnimSwitch::new(&pages_sw);
     let mut curr_page = Pages::Home;
+    let mut last_inst = Instant::now();
 
     loop {
         if curr_page == Pages::AnimSwitch {
-            anim_switch.update_animations(&mut display);
+            let now = Instant::now();
+            let delta = now.duration_since(last_inst).as_millis();
+            if delta > 30 {
+                last_inst = now;
+                anim_switch
+                    .update_animations(core::time::Duration::from_millis(delta), &mut display);
+            }
         }
 
         if let Some(tp) = TOUCH_DATA.try_take() {
@@ -287,37 +263,4 @@ impl From<TouchPoint> for Point {
     fn from(tp: TouchPoint) -> Self {
         Self::new(tp.x as i32, tp.y as i32)
     }
-}
-
-const GB2313_TIER1_16X16_FONT: MultiMonoFont = MultiMonoFont {
-    image: ImageRaw::new(include_bytes!("../assets/GB2313_Tier1_16x16_11.bin"), 3600),
-    glyph_mapping: &StrGlyphMapping::new(include_str!("../assets/GB2313_Tier1.txt"), 0),
-    character_size: CharSize::new(16, 16),
-    character_spacing: 0,
-    baseline: 16,
-};
-const TXT_FONT: UiFont = &[&multi_mono_font::ascii::FONT_9X18, &GB2313_TIER1_16X16_FONT];
-
-pub const fn example_style() -> &'static Style<Rgb565> {
-    // const STYLE: Style<Rgb565> = Style {
-    //     background_color: Rgb565::new(0x4, 0x8, 0x4),
-    //     border_color: Rgb565::RED,
-    //     text_color: Rgb565::WHITE,
-    //     border_width: 1,
-    //     default_font: TXT_FONT,
-    //     default_padding: Size::new(2, 2),
-    //     corner_radius: 5,
-    // };
-
-    const STYLE: Style<Rgb565> = Style {
-        background_color: Rgb565::BLACK,
-        border_color: Rgb565::RED,
-        text_color: Rgb565::WHITE,
-        border_width: 1,
-        default_font: TXT_FONT,
-        default_padding: Size::new(4, 4),
-        corner_radius: 5,
-    };
-
-    &STYLE
 }

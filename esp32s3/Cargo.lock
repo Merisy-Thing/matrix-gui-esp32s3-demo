@@ -24,6 +24,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7b7e4c2464d97fe331d41de9d5db0def0a96f4d823b8b32a2efd503578988973"
 
 [[package]]
+name = "bare-sync"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "413e062d4298f87add2c00120fe80cb827b8afdc354523d49d0a6dba63b437e8"
+dependencies = [
+ "critical-section",
+ "embassy-sync 0.7.2",
+]
+
+[[package]]
 name = "bitfield"
 version = "0.19.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1153,8 +1163,9 @@ dependencies = [
 
 [[package]]
 name = "matrix-gui"
-version = "0.1.0"
-source = "git+https://github.com/Merisy-Thing/matrix-gui.git?branch=main#e68a636ca174eb1bb030141216767e5741a4a6b1"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "160b03797f0933ab87d90f4c237970f0cebc4dc320b473c10abbae6bac204742"
 dependencies = [
  "embedded-graphics",
  "embedded-text",
@@ -1166,9 +1177,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "matrix-gui-demo-pages"
+version = "0.1.0"
+dependencies = [
+ "bare-sync",
+ "embedded-graphics",
+ "enum-iterator",
+ "heapless 0.9.3",
+ "local_static",
+ "log",
+ "matrix-gui",
+ "multi-mono-font",
+ "num-traits",
+]
+
+[[package]]
 name = "matrix-gui-esp32s3"
 version = "0.1.0"
 dependencies = [
+ "bare-sync",
  "critical-section",
  "defmt",
  "dummy-pin",
@@ -1184,11 +1211,8 @@ dependencies = [
  "esp-hal",
  "esp-println",
  "esp-rtos",
- "heapless 0.9.3",
- "local_static",
  "log",
- "matrix-gui",
- "multi-mono-font",
+ "matrix-gui-demo-pages",
  "num-traits",
  "st7789-lcd",
 ]

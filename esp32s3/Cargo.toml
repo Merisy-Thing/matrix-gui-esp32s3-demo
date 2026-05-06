@@ -1,7 +1,8 @@
 [package]
 name = "matrix-gui-esp32s3"
 version = "0.1.0"
-description = "Matrix GUO on esp32s3"
+description = "Matrix GUI on esp32s3"
+authors = ["Merisy-Thing <merisy-thing@outlook.com>"]
 keywords = ["esp-hal", "esp32"]
 license = "MIT"
 edition = "2024"
@@ -39,7 +40,6 @@ esp-println = { version = "0.17.0", default-features = false, features = [
     "colors",
 ] }
 esp-backtrace = { version = "0.19.0", features = ["panic-handler"] }
-multi-mono-font = { version = "0.4" }
 
 defmt = { version = "1.0.1", optional = true }
 log = { version = "0.4", optional = true }
@@ -49,12 +49,12 @@ st7789-lcd = "0.4"
 embedded-hal-bus = "0.3"
 dummy-pin = "1.0"
 embedded-graphics = "0.8"
-matrix-gui = { version = "0.1.0", features = ["part", "popup", "animation"] }
 enum-iterator = "2.3"
 critical-section = "1.2.0"
-heapless = "0.9.3"
-local_static = "0.1"
+
 num-traits = { version = "0.2", default-features = false }
+matrix-gui-demo-pages ={ path= "../domo-pages" }
+bare-sync = "0.1.1"
 
 [patch.crates-io]
-matrix-gui = { git = "https://github.com/Merisy-Thing/matrix-gui.git", branch = "main"  }
+#matrix-gui = { git = "https://github.com/Merisy-Thing/matrix-gui.git", branch = "main"  }

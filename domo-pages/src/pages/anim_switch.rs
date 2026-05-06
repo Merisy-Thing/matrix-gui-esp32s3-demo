@@ -1,6 +1,5 @@
 use core::time::Duration;
 
-use embassy_time::Instant;
 use embedded_graphics::prelude::Point;
 use local_static::LocalStatic;
 use matrix_gui::{animation::Animations, prelude::*};
@@ -30,7 +29,6 @@ pub struct AnimSwitch<'a> {
     anim_manager: AnimManager<'a>,
     sw_anim_id: AnimId,
     lb_anim_id: AnimId,
-    last_inst: Instant,
 }
 
 impl<'a> AnimSwitch<'a> {
@@ -45,8 +43,6 @@ impl<'a> AnimSwitch<'a> {
         let sw_anim_id = anim_manager.add(sw_anim).expect("Failed to add sw_anim");
         let lb_anim_id = anim_manager.add(lb_anim).expect("Failed to add lb_anim");
 
-        let last_inst = Instant::now();
-
         Self {
             widget_states: WidgetStates::new_with_anim(SMARTSTATES.get(), anim_status),
             last_down: false,
@@ -55,7 +51,6 @@ impl<'a> AnimSwitch<'a> {
             anim_manager,
             sw_anim_id,
             lb_anim_id,
-            last_inst,
         }
     }
 
@@ -63,18 +58,13 @@ impl<'a> AnimSwitch<'a> {
         self.widget_states.force_redraw_all();
     }
 
-    pub fn update_animations<D>(&mut self, display: &mut D)
+    pub fn update_animations<D>(&mut self, elapsed: Duration, display: &mut D)
     where
         D: DrawTarget<Color = Rgb565>,
     {
-        let now = Instant::now();
-        let delta = now.duration_since(self.last_inst).as_millis();
-        if delta > 30 {
-            self.last_inst = now;
-            if self.anim_manager.tick(Duration::from_millis(delta)) {
-                self.widget_states.force_redraw(LABEL.id());
-                self.update(true, Point::zero(), display);
-            }
+        if self.anim_manager.tick(elapsed) {
+            self.widget_states.force_redraw(LABEL.id());
+            self.update(true, Point::zero(), display);
         }
     }
 
