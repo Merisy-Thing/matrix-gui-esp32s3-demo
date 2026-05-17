@@ -8,8 +8,8 @@ license = "MIT"
 edition = "2024"
 
 [dependencies]
-matrix-gui = { version = "0.2.0", features = ["part", "popup", "animation"] }
-multi-mono-font = { version = "0.4" }
+matrix-gui = { version = "0.3", features = ["part", "popup", "animation"] }
+multi-mono-font = { version = "0.5" }
 log = { version = "0.4" }
 embedded-graphics = "0.8"
 enum-iterator = "2.3"

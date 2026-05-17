@@ -1163,15 +1163,15 @@ dependencies = [
 
 [[package]]
 name = "matrix-gui"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "160b03797f0933ab87d90f4c237970f0cebc4dc320b473c10abbae6bac204742"
+checksum = "9cc42b72478195f132a840b4f248c3359d66f31f4b47d008abc33d7d1ee663fd"
 dependencies = [
  "embedded-graphics",
  "embedded-text",
  "enum-iterator",
  "log",
- "multi-mono-font",
+ "multi-mono-font 0.5.0",
  "paste",
  "saturating_cast",
 ]
@@ -1187,7 +1187,7 @@ dependencies = [
  "local_static",
  "log",
  "matrix-gui",
- "multi-mono-font",
+ "multi-mono-font 0.5.0",
  "num-traits",
 ]
 
@@ -1237,6 +1237,16 @@ checksum = "e85352f454b31350eb0845bd131b812d7b190d6918ba14961197544b28ec0267"
 dependencies = [
  "embedded-graphics",
  "log",
+]
+
+[[package]]
+name = "multi-mono-font"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5e98a86bc0ab775eadf849ee0230a608ca9e4e91ac402d8b4adf5f33a6097066"
+dependencies = [
+ "cfg-if",
+ "embedded-graphics",
 ]
 
 [[package]]
@@ -1586,7 +1596,7 @@ checksum = "1be074776af3858ffc06a9eca43bd555f29b9d1a1e4a03bca8b0981f640bae34"
 dependencies = [
  "embedded-graphics-core",
  "embedded-hal 1.0.0",
- "multi-mono-font",
+ "multi-mono-font 0.4.4",
  "nb 1.1.0",
 ]
 

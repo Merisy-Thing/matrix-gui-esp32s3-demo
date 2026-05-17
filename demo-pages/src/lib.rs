@@ -5,7 +5,7 @@ pub mod pages;
 use bare_sync::{NoopSyncRawMutex, signal::Signal};
 use embedded_graphics::image::ImageRaw;
 use matrix_gui::prelude::*;
-use multi_mono_font::{CharSize, MultiMonoFont, mapping::StrGlyphMapping};
+use multi_mono_font::{CharSize, GlyphData, MultiMonoFont, mapping::StrGlyphMapping};
 
 pub use pages::*;
 
@@ -33,7 +33,10 @@ impl core::fmt::Display for Pages {
 }
 
 const GB2313_TIER1_16X16_FONT: MultiMonoFont = MultiMonoFont {
-    image: ImageRaw::new(include_bytes!("../assets/GB2313_Tier1_16x16_11.bin"), 3600),
+    glyph_data: GlyphData::ImgRaw(ImageRaw::new(
+        include_bytes!("../assets/GB2313_Tier1_16x16_11.bin"),
+        3600,
+    )),
     glyph_mapping: &StrGlyphMapping::new(include_str!("../assets/GB2313_Tier1.txt"), 0),
     character_size: CharSize::new(16, 16),
     character_spacing: 0,
