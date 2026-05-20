@@ -16,7 +16,8 @@ enum RadioGroup {
 const RADIOBUTTON_IDS: &[RegionId] = &[RADIOBUTTON1.id(), RADIOBUTTON2.id(), RADIOBUTTON3.id()];
 
 const IMAGE_RAW: ImageRaw<BinaryColor> =
-    ImageRaw::<BinaryColor>::new(include_bytes!("../../assets/rust_64x64.bin"), 64);
+    multi_mono_font_glyph::generate_bin_imgraw!("assets/rust_64x64.png");
+
 const MONO_IMAGE: MonoImage<Rgb565> = MonoImage::<Rgb565>::new(&IMAGE_RAW, rgb565!(0xFF0000));
 matrix_gui::i18n_string!(TIP_ON, "打开", "ON");
 matrix_gui::i18n_string!(TIP_OFF, "关闭", "OFF");

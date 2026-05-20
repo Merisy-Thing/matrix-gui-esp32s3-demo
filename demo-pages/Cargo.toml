@@ -10,6 +10,7 @@ edition = "2024"
 [dependencies]
 matrix-gui = { version = "0.3", features = ["part", "popup", "animation"] }
 multi-mono-font = { version = "0.5" }
+multi-mono-font-glyph = { version = "0.1" }
 log = { version = "0.4" }
 embedded-graphics = "0.8"
 enum-iterator = "2.3"
