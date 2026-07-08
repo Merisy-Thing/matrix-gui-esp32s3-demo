@@ -1,6 +1,6 @@
 use embedded_graphics::prelude::Point;
-use local_static::LocalStatic;
 use matrix_gui::prelude::*;
+use static_cell::StaticCell;
 // enum RegionId { .. }
 // const REGIONID_COUNT: usize
 // (RegionID, x, y, width, height)
@@ -32,8 +32,6 @@ matrix_gui::grid_layout_row_major_with_start! (
 
 const WIDGETS_COUNT: usize = BTN_4X6_COUNT + REGIONID_COUNT;
 
-static SMARTSTATES: LocalStatic<[RenderState; WIDGETS_COUNT]> = LocalStatic::new();
-
 pub struct MsgBox<'a> {
     widget_states: WidgetStates<'a>,
     last_down: bool,
@@ -43,8 +41,13 @@ pub struct MsgBox<'a> {
 
 impl<'a> MsgBox<'a> {
     pub fn new(pages_sw: &'a crate::PageSw) -> Self {
+        let states = {
+            static SMARTSTATES: StaticCell<[RenderState; WIDGETS_COUNT]> = StaticCell::new();
+            SMARTSTATES.init(RenderState::new_array())
+        };
+
         Self {
-            widget_states: WidgetStates::new(SMARTSTATES.get()),
+            widget_states: WidgetStates::new(states),
             last_down: false,
             show: false,
             pages_sw,
@@ -59,37 +62,47 @@ impl<'a> MsgBox<'a> {
     where
         D: DrawTarget<Color = Rgb565>,
     {
-        for _ in 0..2 {
-            let mut ui = Ui::new_fullscreen(display, &self.widget_states, crate::example_style());
-            super::ui_interact(self.last_down, tp_down, location, &mut ui);
-            self.last_down = tp_down;
+        while self.update_inner(tp_down, location, display) {}
+    }
 
-            ui.add(Background::new(RegionId::Background));
+    /// return true if any button is clicked, page need to redraw again
+    fn update_inner<D>(&mut self, tp_down: bool, location: Point, display: &mut D) -> bool
+    where
+        D: DrawTarget<Color = Rgb565>,
+    {
+        let mut ui = Ui::new_fullscreen(display, &self.widget_states, crate::example_style());
+        super::ui_interact(self.last_down, tp_down, location, &mut ui);
+        self.last_down = tp_down;
 
-            if !self.show {
-                if ui.add(Button::new(&BTN_4X6_GLRM[0], "Show")).is_clicked() {
-                    log::info!("BTN0 clicked");
-                    self.show = true;
-                }
-                const BTN_LB_LIST: &[&str] = &[
-                    "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14",
-                    "15", "16", "17", "18", "19", "20", "21", "22", "23",
-                ];
-                for (idx, btn) in (BTN_4X6_GLRM[1..]).iter().enumerate() {
-                    ui.add(Button::new(btn, BTN_LB_LIST[idx]));
-                }
-            } else {
-                let response = ui.add(
-                    MessageBox::new(MSG_BOX, "This is title", "Hello World\nHello Matrix GUI!")
-                        .with_ok_btn(MSG_BOX_OK, "OoooK"),
-                );
-                if response.is_clicked() {
-                    log::info!("OK msg clicked");
-                    self.show = false;
-                    self.pages_sw.signal(crate::Pages::Home);
-                    break;
-                }
+        ui.add(Background::new(RegionId::Background));
+
+        let show_resp = ui.add(Button::new(&BTN_4X6_GLRM[0], "Show"));
+        if show_resp.is_clicked() {
+            log::info!("BTN0 clicked");
+            self.show = true;
+            return true;
+        }
+
+        const BTN_LB_LIST: &[&str] = &[
+            "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16",
+            "17", "18", "19", "20", "21", "22", "23",
+        ];
+        for (idx, btn) in (BTN_4X6_GLRM[1..]).iter().enumerate() {
+            if ui.add(Button::new(btn, BTN_LB_LIST[idx])).is_clicked() {
+                return true;
             }
         }
+        if self.show {
+            let response = ui.add(
+                MessageBox::new(MSG_BOX, "This is title", "Hello World\nHello Matrix GUI!")
+                    .with_ok_btn(MSG_BOX_OK, "OoooK"),
+            );
+            if response.is_clicked() {
+                log::info!("OK msg clicked");
+                self.show = false;
+                self.pages_sw.signal(crate::Pages::Home);
+            }
+        }
+        false
     }
 }

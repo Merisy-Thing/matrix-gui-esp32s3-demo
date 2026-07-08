@@ -1,10 +1,10 @@
 use core::fmt::Write;
 use embedded_graphics::prelude::Point;
 use heapless::{String, Vec};
-use local_static::LocalStatic;
 use matrix_gui::prelude::*;
 #[allow(unused_imports)]
 use num_traits::float::FloatCore;
+use static_cell::StaticCell;
 
 // enum RegionId { .. }
 // const REGIONID_COUNT: usize
@@ -35,8 +35,6 @@ matrix_gui::grid_layout_row_major_with_start! (
 
 const WIDGETS_COUNT: usize = CALC_COUNT + REGIONID_COUNT;
 
-static SMARTSTATES: LocalStatic<[RenderState; WIDGETS_COUNT]> = LocalStatic::new();
-
 pub struct Calculator<'a> {
     widget_states: WidgetStates<'a>,
     last_down: bool,
@@ -46,8 +44,12 @@ pub struct Calculator<'a> {
 
 impl<'a> Calculator<'a> {
     pub fn new(pages_sw: &'a crate::PageSw) -> Self {
+        let states = {
+            static SMARTSTATES: StaticCell<[RenderState; WIDGETS_COUNT]> = StaticCell::new();
+            SMARTSTATES.init(RenderState::new_array())
+        };
         Self {
-            widget_states: WidgetStates::new(SMARTSTATES.get()),
+            widget_states: WidgetStates::new(states),
             last_down: false,
             expression: String::new(),
             pages_sw,
@@ -62,38 +64,43 @@ impl<'a> Calculator<'a> {
     where
         D: DrawTarget<Color = Rgb565>,
     {
-        loop {
-            let mut ui = Ui::new_fullscreen(display, &self.widget_states, crate::example_style());
-            super::ui_interact(self.last_down, tp_down, location, &mut ui);
-            self.last_down = tp_down;
+        while self.update_inner(tp_down, location, display) {}
+    }
 
-            ui.add(Background::new(RegionId::Background));
+    fn update_inner<D>(&mut self, tp_down: bool, location: Point, display: &mut D) -> bool
+    where
+        D: DrawTarget<Color = Rgb565>,
+    {
+        let mut ui = Ui::new_fullscreen(display, &self.widget_states, crate::example_style());
+        super::ui_interact(self.last_down, tp_down, location, &mut ui);
+        self.last_down = tp_down;
 
-            let mut input = None;
-            ui.add(Label::new(EXPRESSION, &self.expression).with_align(HorizontalAlign::Right));
-            if ui.add(Button::new(AC, "AC")).is_clicked() {
-                log::info!("Btn1 clicked");
-                input = Some("AC");
-            }
+        ui.add(Background::new(RegionId::Background));
 
-            const BTN_LB_LIST: &[&str] = &[
-                "7", "8", "9", "/", "4", "5", "6", "X", "1", "2", "3", "-", "0", ".", "=", "+",
-            ];
-
-            for (idx, btn) in CALC_GLRM.iter().enumerate() {
-                if ui.add(Button::new(btn, BTN_LB_LIST[idx])).is_clicked() {
-                    input = Some(BTN_LB_LIST[idx]);
-                }
-            }
-
-            if let Some(input) = input {
-                self.user_input(input);
-                self.widget_states.force_redraw(EXPRESSION.id());
-                continue;
-            }
-
-            break;
+        let mut input = None;
+        ui.add(Label::new(EXPRESSION, &self.expression).with_align(HorizontalAlign::Right));
+        if ui.add(Button::new(AC, "AC")).is_clicked() {
+            log::info!("Btn1 clicked");
+            input = Some("AC");
         }
+
+        const BTN_LB_LIST: &[&str] = &[
+            "7", "8", "9", "/", "4", "5", "6", "X", "1", "2", "3", "-", "0", ".", "=", "+",
+        ];
+
+        for (idx, btn) in CALC_GLRM.iter().enumerate() {
+            if ui.add(Button::new(btn, BTN_LB_LIST[idx])).is_clicked() {
+                input = Some(BTN_LB_LIST[idx]);
+            }
+        }
+
+        if let Some(input) = input {
+            self.user_input(input);
+            self.widget_states.force_redraw(EXPRESSION.id());
+            return true;
+        }
+
+        false
     }
 
     fn user_input(&mut self, input: &str) {

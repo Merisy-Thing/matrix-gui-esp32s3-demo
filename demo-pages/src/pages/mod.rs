@@ -1,15 +1,17 @@
-use local_static::LocalStatic;
 use matrix_gui::prelude::*;
 
 pub mod anim_switch;
 pub mod basic_example;
 pub mod calculator;
+pub mod clock;
 pub mod msg_box;
 
 pub use anim_switch::*;
 pub use basic_example::*;
 pub use calculator::*;
+pub use clock::*;
 pub use msg_box::*;
+use static_cell::StaticCell;
 
 // enum RegionId { .. }
 // const REGIONID_COUNT: usize
@@ -26,13 +28,11 @@ matrix_gui::grid_layout_row_major_with_start! (
     (15, 38, 250, 195),
     (4, 3, 5),
     [
-        Basic, MsgBox, Calculator, AnimSwitch,
+        Basic, MsgBox, Calculator, AnimSwitch, Clock,
     ]
 );
 
 const WIDGETS_COUNT: usize = REGIONID_COUNT + HOME_COUNT;
-
-static SMARTSTATES: LocalStatic<[RenderState; WIDGETS_COUNT]> = LocalStatic::new();
 
 pub struct HomePage<'a> {
     widget_states: WidgetStates<'a>,
@@ -42,8 +42,12 @@ pub struct HomePage<'a> {
 
 impl<'a> HomePage<'a> {
     pub fn new(pages_sw: &'a crate::PageSw) -> Self {
+        let states = {
+            static SMARTSTATES: StaticCell<[RenderState; WIDGETS_COUNT]> = StaticCell::new();
+            SMARTSTATES.init(RenderState::new_array())
+        };
         Self {
-            widget_states: WidgetStates::new(SMARTSTATES.get()),
+            widget_states: WidgetStates::new(states),
             last_down: false,
             pages_sw,
         }
@@ -57,28 +61,28 @@ impl<'a> HomePage<'a> {
     where
         D: DrawTarget<Color = Rgb565>,
     {
-        for _ in 0..2 {
-            let mut ui = Ui::new_fullscreen(display, &self.widget_states, crate::example_style());
-            ui_interact(self.last_down, tp_down, location, &mut ui);
-            self.last_down = tp_down;
+        let mut ui = Ui::new_fullscreen(display, &self.widget_states, crate::example_style());
+        ui_interact(self.last_down, tp_down, location, &mut ui);
+        self.last_down = tp_down;
 
-            ui.add(Background::new(RegionId::Background));
+        ui.add(Background::new(RegionId::Background));
 
-            ui.add(Label::new(TITLE, "Matrix GUI 示例").with_align(HorizontalAlign::Center));
+        ui.add(Label::new(TITLE, "Matrix GUI 示例").with_align(HorizontalAlign::Center));
 
-            if ui.add(Button::new(BASIC, "Basic")).is_clicked() {
-                self.pages_sw.signal(crate::Pages::Basic);
-            }
-            if ui.add(Button::new(MSGBOX, "MsgBox")).is_clicked() {
-                self.pages_sw.signal(crate::Pages::MsgBox);
-            }
-            if ui.add(Button::new(CALCULATOR, "Calc")).is_clicked() {
-                self.pages_sw.signal(crate::Pages::Calculator);
-            }
-            if ui.add(Button::new(ANIMSWITCH, "Anim SW")).is_clicked() {
-                self.pages_sw.signal(crate::Pages::AnimSwitch);
-            }
-            break;
+        if ui.add(Button::new(BASIC, "Basic")).is_clicked() {
+            self.pages_sw.signal(crate::Pages::Basic);
+        }
+        if ui.add(Button::new(MSGBOX, "MsgBox")).is_clicked() {
+            self.pages_sw.signal(crate::Pages::MsgBox);
+        }
+        if ui.add(Button::new(CALCULATOR, "Calc")).is_clicked() {
+            self.pages_sw.signal(crate::Pages::Calculator);
+        }
+        if ui.add(Button::new(ANIMSWITCH, "Anim SW")).is_clicked() {
+            self.pages_sw.signal(crate::Pages::AnimSwitch);
+        }
+        if ui.add(Button::new(CLOCK, "Clock")).is_clicked() {
+            self.pages_sw.signal(crate::Pages::Clock);
         }
     }
 }

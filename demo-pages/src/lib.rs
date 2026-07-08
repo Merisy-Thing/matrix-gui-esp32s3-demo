@@ -18,6 +18,7 @@ pub enum Pages {
     MsgBox,
     Calculator,
     AnimSwitch,
+    Clock,
 }
 
 impl core::fmt::Display for Pages {
@@ -28,6 +29,7 @@ impl core::fmt::Display for Pages {
             Pages::MsgBox => write!(f, "MsgBox"),
             Pages::Calculator => write!(f, "Calculator"),
             Pages::AnimSwitch => write!(f, "AnimSwitch"),
+            Pages::Clock => write!(f, "Clock"),
         }
     }
 }

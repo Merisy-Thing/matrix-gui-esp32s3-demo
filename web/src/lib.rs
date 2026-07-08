@@ -110,6 +110,7 @@ pub fn start_demo_task(mut display: WebSimulatorDisplay<Rgb565>) -> Result<(), J
     let mut msg_box = demo::MsgBox::new(&PAGES_SW);
     let mut calculator = demo::Calculator::new(&PAGES_SW);
     let mut anim_switch = demo::AnimSwitch::new(&PAGES_SW);
+    let mut clock = demo::Clock::new(&PAGES_SW);
     let mut curr_page = Pages::Home;
     let tick_count = std::rc::Rc::new(std::cell::RefCell::new(0_u64));
     let tick_count_clone = tick_count.clone();
@@ -122,13 +123,21 @@ pub fn start_demo_task(mut display: WebSimulatorDisplay<Rgb565>) -> Result<(), J
         let mut now = tick_count_clone.borrow_mut();
         *now += TICK_INTERVAL;
 
-        if curr_page == Pages::AnimSwitch {
+        if curr_page == Pages::AnimSwitch || curr_page == Pages::Clock {
             let mut last_inst = last_inst_clone.borrow_mut();
             let delta = *now - *last_inst;
+
+            if curr_page == Pages::Clock && *now % 1000 == 0 {
+                clock.add_one_second();
+            }
             if delta > 30 {
                 *last_inst = *now;
-                anim_switch
-                    .update_animations(core::time::Duration::from_millis(delta), &mut display);
+                if curr_page == Pages::AnimSwitch {
+                    anim_switch
+                        .update_animations(core::time::Duration::from_millis(delta), &mut display);
+                } else {
+                    clock.update_animations(core::time::Duration::from_millis(delta), &mut display);
+                }
 
                 display.flush().expect("could not flush buffer");
             }
@@ -155,6 +164,9 @@ pub fn start_demo_task(mut display: WebSimulatorDisplay<Rgb565>) -> Result<(), J
                 }
                 Pages::AnimSwitch => {
                     anim_switch.update(tp_down, location, &mut display);
+                }
+                Pages::Clock => {
+                    clock.update(tp_down, location, &mut display);
                 }
             }
 
@@ -183,6 +195,10 @@ pub fn start_demo_task(mut display: WebSimulatorDisplay<Rgb565>) -> Result<(), J
                 Pages::AnimSwitch => {
                     anim_switch.redraw();
                     anim_switch.update(false, Point::zero(), &mut display);
+                }
+                Pages::Clock => {
+                    clock.redraw();
+                    clock.update(false, Point::zero(), &mut display);
                 }
             }
 

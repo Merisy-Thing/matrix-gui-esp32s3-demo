@@ -1,8 +1,8 @@
 use core::fmt::Write;
 use embedded_graphics::{image::ImageRaw, prelude::Point};
-use local_static::LocalStatic;
 use matrix_gui::prelude::*;
 use multi_mono_font::MonoImage;
+use static_cell::StaticCell;
 
 const WIDGETS_COUNT: usize = REGIONID_COUNT;
 
@@ -50,8 +50,6 @@ matrix_gui::free_form_region!(
     (IMAGE, 176, 146, 64, 64),
 );
 
-static SMARTSTATES: LocalStatic<[RenderState; WIDGETS_COUNT]> = LocalStatic::new();
-
 pub struct BasicExample<'a> {
     widget_states: WidgetStates<'a>,
     last_down: bool,
@@ -72,8 +70,12 @@ impl<'a> BasicExample<'a> {
             lb_str
         };
 
+        let states = {
+            static SMARTSTATES: StaticCell<[RenderState; WIDGETS_COUNT]> = StaticCell::new();
+            SMARTSTATES.init(RenderState::new_array())
+        };
         Self {
-            widget_states: WidgetStates::new(SMARTSTATES.get()),
+            widget_states: WidgetStates::new(states),
             last_down: false,
             slider_val: 0,
             checkbox1: false,
@@ -92,158 +94,153 @@ impl<'a> BasicExample<'a> {
     where
         D: DrawTarget<Color = Rgb565>,
     {
-        loop {
-            let mut ui = Ui::new_fullscreen(display, &self.widget_states, crate::example_style());
-            super::ui_interact(self.last_down, tp_down, location, &mut ui);
-            self.last_down = tp_down;
+        while self.update_inner(tp_down, location, display) {}
+    }
 
-            ui.add(Background::new(RegionId::Background));
+    fn update_inner<D>(&mut self, tp_down: bool, location: Point, display: &mut D) -> bool
+    where
+        D: DrawTarget<Color = Rgb565>,
+    {
+        let mut ui = Ui::new_fullscreen(display, &self.widget_states, crate::example_style());
+        super::ui_interact(self.last_down, tp_down, location, &mut ui);
+        self.last_down = tp_down;
 
-            if self.widget_states.should_redraw_multi(&[TITLE.id()]) {
-                log::info!("Static 1 redraw needed");
-                ui.add(Label::new(TITLE, "控件示例").with_align(HorizontalAlign::Center));
-            }
-            ui.add(Label::new(LABEL1, &self.label1));
+        ui.add(Background::new(RegionId::Background));
 
-            ui.add(StaticImage::new(IMAGE, &MONO_IMAGE));
-
-            ui.lazy_draw(LABEL2.id(), |lazy_ui| {
-                log::info!("Label2 redraw");
-                let mut lb_str: heapless::String<32> = heapless::String::new();
-
-                write!(&mut lb_str, "Label2 {}", self.slider_val).unwrap();
-                lazy_ui.add(Label::new(LABEL2, &lb_str).with_align(HorizontalAlign::Right))
-            });
-
-            if ui.add(Button::new(BUTTON1, "Btn1")).is_clicked() {
-                log::info!("Btn1 clicked");
-                self.label1.clear();
-                write!(&mut self.label1, "Btn1").unwrap();
-                self.widget_states.force_redraw(LABEL1.id());
-                continue;
-            }
-            if ui.add(Button::new(BUTTON2, "Button2")).is_clicked() {
-                log::info!("Btn2 clicked");
-                self.label1.clear();
-                write!(&mut self.label1, "Btn2").unwrap();
-                self.widget_states.force_redraw(LABEL1.id());
-                continue;
-            }
-            if ui.add(Button::new(BUTTON3, "Button3")).is_clicked() {
-                log::info!("Btn3 clicked");
-                self.label1.clear();
-                write!(&mut self.label1, "Btn3").unwrap();
-                self.widget_states.force_redraw(LABEL1.id());
-                self.pages_sw.signal(crate::Pages::Home);
-                continue;
-            }
-
-            if self
-                .widget_states
-                .should_redraw_multi(&[LINE_V1.id(), LINE_V2.id(), LINE_H1.id()])
-            {
-                log::info!("Lines redraw needed");
-                ui.add(StaticLine::new(LINE_V1, &OriVertical));
-                ui.add(StaticLine::new(LINE_V2, &OriVertical));
-                ui.add(StaticLine::new(LINE_H1, &OriHorizontal));
-            }
-
-            if self.widget_states.should_redraw_multi(&[BAR.id()]) {
-                log::info!("Bar redraw needed");
-                ui.add(Bar::new(BAR, -100, 100, self.slider_val).with_border_color(Rgb565::BLACK));
-            }
-
-            if ui
-                .add(
-                    Slider::new(SLIDER, &mut self.slider_val, -100..=100)
-                        .label("Fancy Slider")
-                        .step_size(5),
-                )
-                .is_value_changed()
-            {
-                log::info!("Slider value: {}", self.slider_val);
-                self.widget_states
-                    .force_redraw_multi(&[BAR.id(), LABEL2.id()]);
-                continue;
-            }
-
-            if ui
-                .add(Checkbox::new(CHECKBOX_1, "Checkbox1", &mut self.checkbox1))
-                .is_value_changed()
-            {
-                log::info!("Checkbox1 changed: {}", self.checkbox1);
-                let tip: &str = &TipOnOff(self.checkbox1);
-                self.label1.clear();
-                write!(&mut self.label1, "{}", tip).unwrap();
-                self.widget_states.force_redraw(LABEL1.id());
-                continue;
-            }
-            if ui
-                .add(Checkbox::new(CHECKBOX_2, "Checkbox2", &mut self.checkbox2))
-                .is_value_changed()
-            {
-                log::info!("Checkbox2 changed: {}", self.checkbox2);
-                Languages::switch_language();
-
-                let lan: &str = Languages::get_language().into();
-                self.label1.clear();
-                write!(&mut self.label1, "{}", lan).unwrap();
-                self.widget_states.force_redraw(LABEL1.id());
-                continue;
-            }
-
-            if ui
-                .add(RadioButton::new(
-                    RADIOBUTTON1,
-                    "Radio1",
-                    RadioGroup::Btn1,
-                    &mut self.radio,
-                ))
-                .is_value_changed()
-            {
-                log::info!("Radio1 clicked {:?}", self.radio);
-                self.label1.clear();
-                write!(&mut self.label1, "Radio1").unwrap();
-                self.widget_states.force_redraw(LABEL1.id());
-                self.widget_states
-                    .force_redraw_range(RADIOBUTTON1.id(), RADIOBUTTON3.id());
-                continue;
-            }
-
-            if ui
-                .add(RadioButton::new(
-                    RADIOBUTTON2,
-                    "Radio2",
-                    RadioGroup::Btn2,
-                    &mut self.radio,
-                ))
-                .is_value_changed()
-            {
-                log::info!("Radio2 clicked {:?}", self.radio);
-                self.label1.clear();
-                write!(&mut self.label1, "Radio2").unwrap();
-                self.widget_states.force_redraw(LABEL1.id());
-                self.widget_states.force_redraw_multi(RADIOBUTTON_IDS);
-                continue;
-            }
-            if ui
-                .add(RadioButton::new(
-                    RADIOBUTTON3,
-                    "Radio3",
-                    RadioGroup::Btn3,
-                    &mut self.radio,
-                ))
-                .is_value_changed()
-            {
-                log::info!("Radio3 clicked {:?}", self.radio);
-                self.label1.clear();
-                write!(&mut self.label1, "Radio3").unwrap();
-                self.widget_states.force_redraw(LABEL1.id());
-                self.widget_states.force_redraw_multi(RADIOBUTTON_IDS);
-                continue;
-            }
-
-            break;
+        if self.widget_states.should_redraw_multi(&[TITLE.id()]) {
+            log::info!("Static 1 redraw needed");
+            ui.add(Label::new(TITLE, "控件示例").with_align(HorizontalAlign::Center));
         }
+        ui.add(Label::new(LABEL1, &self.label1));
+
+        let mut set_label1 = |label: &str| {
+            self.label1.clear();
+            write!(&mut self.label1, "{}", label).unwrap();
+            self.widget_states.force_redraw(LABEL1.id());
+        };
+
+        ui.add(StaticImage::new(IMAGE, &MONO_IMAGE));
+
+        ui.lazy_draw(LABEL2.id(), |lazy_ui| {
+            log::info!("Label2 redraw");
+            let mut lb_str: heapless::String<32> = heapless::String::new();
+
+            write!(&mut lb_str, "Label2 {}", self.slider_val).unwrap();
+            lazy_ui.add(Label::new(LABEL2, &lb_str).with_align(HorizontalAlign::Right))
+        });
+
+        if ui.add(Button::new(BUTTON1, "Btn1")).is_clicked() {
+            log::info!("Btn1 clicked");
+            set_label1("Btn1");
+            return true;
+        }
+        if ui.add(Button::new(BUTTON2, "Button2")).is_clicked() {
+            log::info!("Btn2 clicked");
+            set_label1("Btn2");
+            return true;
+        }
+        if ui.add(Button::new(BUTTON3, "Button3")).is_clicked() {
+            log::info!("Btn3 clicked");
+            set_label1("Btn3");
+            self.pages_sw.signal(crate::Pages::Home);
+            return true;
+        }
+
+        if self
+            .widget_states
+            .should_redraw_multi(&[LINE_V1.id(), LINE_V2.id(), LINE_H1.id()])
+        {
+            log::info!("Lines redraw needed");
+            ui.add(StaticLine::new(LINE_V1, &OriVertical));
+            ui.add(StaticLine::new(LINE_V2, &OriVertical));
+            ui.add(StaticLine::new(LINE_H1, &OriHorizontal));
+        }
+
+        if self.widget_states.should_redraw_multi(&[BAR.id()]) {
+            log::info!("Bar redraw needed");
+            ui.add(Bar::new(BAR, -100, 100, self.slider_val).with_border_color(Rgb565::BLACK));
+        }
+
+        if ui
+            .add(
+                Slider::new(SLIDER, &mut self.slider_val, -100..=100)
+                    .label("Fancy Slider")
+                    .step_size(5),
+            )
+            .is_value_changed()
+        {
+            log::info!("Slider value: {}", self.slider_val);
+            self.widget_states
+                .force_redraw_multi(&[BAR.id(), LABEL2.id()]);
+            return true;
+        }
+
+        if ui
+            .add(Checkbox::new(CHECKBOX_1, "Checkbox1", &mut self.checkbox1))
+            .is_value_changed()
+        {
+            log::info!("Checkbox1 changed: {}", self.checkbox1);
+            let tip: &str = &TipOnOff(self.checkbox1);
+            set_label1(tip);
+            return true;
+        }
+        if ui
+            .add(Checkbox::new(CHECKBOX_2, "Checkbox2", &mut self.checkbox2))
+            .is_value_changed()
+        {
+            log::info!("Checkbox2 changed: {}", self.checkbox2);
+            Languages::switch_language();
+
+            let lan: &str = Languages::get_language().into();
+            set_label1(lan);
+            return true;
+        }
+
+        if ui
+            .add(RadioButton::new(
+                RADIOBUTTON1,
+                "Radio1",
+                RadioGroup::Btn1,
+                &mut self.radio,
+            ))
+            .is_value_changed()
+        {
+            log::info!("Radio1 clicked {:?}", self.radio);
+            set_label1("Radio1");
+            self.widget_states
+                .force_redraw_range(RADIOBUTTON1.id(), RADIOBUTTON3.id());
+            return true;
+        }
+
+        if ui
+            .add(RadioButton::new(
+                RADIOBUTTON2,
+                "Radio2",
+                RadioGroup::Btn2,
+                &mut self.radio,
+            ))
+            .is_value_changed()
+        {
+            log::info!("Radio2 clicked {:?}", self.radio);
+            set_label1("Radio2");
+            self.widget_states.force_redraw_multi(RADIOBUTTON_IDS);
+            return true;
+        }
+        if ui
+            .add(RadioButton::new(
+                RADIOBUTTON3,
+                "Radio3",
+                RadioGroup::Btn3,
+                &mut self.radio,
+            ))
+            .is_value_changed()
+        {
+            log::info!("Radio3 clicked {:?}", self.radio);
+            set_label1("Radio3");
+            self.widget_states.force_redraw_multi(RADIOBUTTON_IDS);
+            return true;
+        }
+
+        false
     }
 }

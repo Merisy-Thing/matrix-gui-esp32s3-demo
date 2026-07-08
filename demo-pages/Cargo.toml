@@ -15,9 +15,9 @@ log = { version = "0.4" }
 embedded-graphics = "0.8"
 enum-iterator = "2.3"
 heapless = "0.9"
-local_static = "0.1"
 num-traits = { version = "0.2", default-features = false }
 bare-sync = "0.1.1"
+static_cell = "2.1.1"
 
 [patch.crates-io]
 #matrix-gui = { git = "https://github.com/Merisy-Thing/matrix-gui.git", branch = "main"  }

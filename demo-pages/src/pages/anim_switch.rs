@@ -1,8 +1,8 @@
 use core::time::Duration;
 
 use embedded_graphics::prelude::Point;
-use local_static::LocalStatic;
 use matrix_gui::{animation::Animations, prelude::*};
+use static_cell::StaticCell;
 
 // enum RegionID { .. }
 // const REGIONID_COUNT: usize
@@ -18,9 +18,6 @@ matrix_gui::free_form_region!(
 
 const WIDGETS_COUNT: usize = REGIONID_COUNT;
 
-static SMARTSTATES: LocalStatic<[RenderState; WIDGETS_COUNT]> = LocalStatic::new();
-static ANIMATIONS: LocalStatic<Animations<2>> = LocalStatic::new();
-
 pub struct AnimSwitch<'a> {
     widget_states: WidgetStates<'a>,
     last_down: bool,
@@ -33,8 +30,10 @@ pub struct AnimSwitch<'a> {
 
 impl<'a> AnimSwitch<'a> {
     pub fn new(pages_sw: &'a crate::PageSw) -> Self {
-        ANIMATIONS.set(Animations::<2>::new());
-        let (animations, anim_status) = ANIMATIONS.get_mut().as_mut();
+        let (animations, anim_status) = {
+            static ANIMATIONS: StaticCell<Animations<2>> = StaticCell::new();
+            ANIMATIONS.init(Animations::<2>::new()).as_mut()
+        };
         let mut anim_manager = AnimManager::new(animations, anim_status);
 
         let sw_anim = Anim::new(0, 100, Duration::from_millis(250));
@@ -43,8 +42,12 @@ impl<'a> AnimSwitch<'a> {
         let sw_anim_id = anim_manager.add(sw_anim).expect("Failed to add sw_anim");
         let lb_anim_id = anim_manager.add(lb_anim).expect("Failed to add lb_anim");
 
+        let states = {
+            static SMARTSTATES: StaticCell<[RenderState; WIDGETS_COUNT]> = StaticCell::new();
+            SMARTSTATES.init(RenderState::new_array())
+        };
         Self {
-            widget_states: WidgetStates::new_with_anim(SMARTSTATES.get(), anim_status),
+            widget_states: WidgetStates::new_with_anim(states, anim_status),
             last_down: false,
             sw_on: false,
             pages_sw,

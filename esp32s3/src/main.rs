@@ -180,17 +180,27 @@ async fn main(spawner: embassy_executor::Spawner) {
     let mut msg_box = demo::MsgBox::new(&pages_sw);
     let mut calculator = demo::Calculator::new(&pages_sw);
     let mut anim_switch = demo::AnimSwitch::new(&pages_sw);
+    let mut clock = demo::Clock::new(&pages_sw);
     let mut curr_page = Pages::Home;
     let mut last_inst = Instant::now();
+    let mut secs_inst = Instant::now();
 
     loop {
-        if curr_page == Pages::AnimSwitch {
+        if curr_page == Pages::AnimSwitch || curr_page == Pages::Clock {
             let now = Instant::now();
+            if (curr_page == Pages::Clock) && (now - secs_inst >= Duration::from_secs(1)) {
+                clock.add_one_second();
+                secs_inst = now;
+            }
             let delta = now.duration_since(last_inst).as_millis();
             if delta > 30 {
                 last_inst = now;
-                anim_switch
-                    .update_animations(core::time::Duration::from_millis(delta), &mut display);
+                if curr_page == Pages::AnimSwitch {
+                    anim_switch
+                        .update_animations(core::time::Duration::from_millis(delta), &mut display);
+                } else {
+                    clock.update_animations(core::time::Duration::from_millis(delta), &mut display);
+                }
             }
         }
 
@@ -216,6 +226,9 @@ async fn main(spawner: embassy_executor::Spawner) {
                 }
                 Pages::AnimSwitch => {
                     anim_switch.update(tp_down, location, &mut display);
+                }
+                Pages::Clock => {
+                    clock.update(tp_down, location, &mut display);
                 }
             }
 
@@ -249,6 +262,10 @@ async fn main(spawner: embassy_executor::Spawner) {
                 Pages::AnimSwitch => {
                     anim_switch.redraw();
                     anim_switch.update(false, Point::zero(), &mut display);
+                }
+                Pages::Clock => {
+                    clock.redraw();
+                    clock.update(false, Point::zero(), &mut display);
                 }
             }
             log::info!("redraw {} cost: {}ms", page, tick.elapsed().as_millis());
